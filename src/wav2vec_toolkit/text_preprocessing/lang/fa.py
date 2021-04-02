@@ -154,7 +154,7 @@ def multiple_replace(text, chars_to_mapping):
 
 
 def remove_special_characters(text, chars_to_ignore_regex):
-    text = re.sub(chars_to_ignore_regex, "", text).lower() + " "
+    text = re.sub(chars_to_ignore_regex, "", text).lower()
     return text
 
 
