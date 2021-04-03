@@ -13,7 +13,7 @@ low-resource languages **[link]**
 
 	```bash
 	git clone git@github.com:<your Github handle>/wav2vec-toolkit.git
-	cd datasets
+	cd wav2vec-toolkit
 	git remote add upstream https://github.com/anton-l/wav2vec-toolkit.git
 	```
 
