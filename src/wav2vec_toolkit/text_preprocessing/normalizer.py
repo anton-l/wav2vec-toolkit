@@ -103,7 +103,7 @@ def normalizer(
     word_level_action=None,
     text_level_action=None,
 ):
-    """[summary]
+    """A general normalizer for every language
 
     Args:
         batch (Dict): A batch of input.
