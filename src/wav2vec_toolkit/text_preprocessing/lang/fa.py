@@ -1,18 +1,8 @@
-"""
-Credit: m3hrdadfi
-https://huggingface.co/m3hrdadfi/wav2vec2-large-xlsr-persian-v2
-"""
-
-import re
-import string
-
 import hazm
 
 
-_normalizer = hazm.Normalizer()
-
-
-chars_to_ignore = [
+normalizer = hazm.Normalizer()
+CHARS_TO_IGNORE = [
     ",",
     "?",
     ".",
@@ -59,13 +49,8 @@ chars_to_ignore = [
     "„",
     "ā",
     "š",
-    # "ء",
 ]
-
-# In case of farsi
-chars_to_ignore = chars_to_ignore + list(string.ascii_lowercase + string.digits)
-
-chars_to_mapping = {
+DICTIONARY = {
     "ك": "ک",
     "دِ": "د",
     "بِ": "ب",
@@ -148,24 +133,11 @@ chars_to_mapping = {
 }
 
 
-def multiple_replace(text, chars_to_mapping):
-    pattern = "|".join(map(re.escape, chars_to_mapping.keys()))
-    return re.sub(pattern, lambda m: chars_to_mapping[m.group()], str(text))
+
+def word_level_action(word):
+    return word
 
 
-def remove_special_characters(text, chars_to_ignore_regex):
-    text = re.sub(chars_to_ignore_regex, "", text).lower()
-    return text
-
-
-def normalize(text):
-    chars_to_ignore_regex = f"""[{"".join(chars_to_ignore)}]"""
-    text = text.lower().strip()
-
-    text = _normalizer.normalize(text)
-    text = multiple_replace(text, chars_to_mapping)
-    text = remove_special_characters(text, chars_to_ignore_regex)
-    text = re.sub(" +", " ", text)
-    text = text.strip() + " "
-
+def text_level_action(text):
+    text = normalizer.normalize(text)
     return text

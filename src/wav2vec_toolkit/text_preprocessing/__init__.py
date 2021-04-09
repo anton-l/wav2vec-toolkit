@@ -1,0 +1,1 @@
+from wav2vec_toolkit.text_preprocessing.normalizer import normalizer
