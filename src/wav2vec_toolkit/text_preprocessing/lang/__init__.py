@@ -1,10 +1,5 @@
-from wav2vec_toolkit.text_preprocessing.lang import (
-    default,
-    et,
-    fa,
-    ka,
-    lt,
-)
+from wav2vec_toolkit.text_preprocessing.lang import default, et, fa, ka, lt
+
 
 LANGUAGES = {
     "default": {

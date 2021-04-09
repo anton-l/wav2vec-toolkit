@@ -1,14 +1,11 @@
 import re
 import string
-from typing import Callable, List, Dict, Optional
+from typing import Callable, Dict, List, Optional
 
 from wav2vec_toolkit.text_preprocessing.lang import LANGUAGES
 
 
-def chars_to_map(
-    sentence: str,
-    dictionary: Dict[str, str] = {}
-) -> str:
+def chars_to_map(sentence: str, dictionary: Dict[str, str] = {}) -> str:
     """Maps every character, words, and phrase into a proper one.
 
     Args:
@@ -22,10 +19,7 @@ def chars_to_map(
     return re.sub(pattern, lambda m: dictionary[m.group()], str(sentence))
 
 
-def chars_to_remove(
-    sentence: str,
-    chars_to_ignore_regex: str
-) -> str:
+def chars_to_remove(sentence: str, chars_to_ignore_regex: str) -> str:
     """Filters out specified characters from sentence
 
     Args:
@@ -39,13 +33,10 @@ def chars_to_remove(
     return sentence
 
 
-def word_level_normalizer(
-    sentence: str,
-    fn_callback=None
-) -> str:
+def word_level_normalizer(sentence: str, fn_callback=None) -> str:
     """A world level of normalization using an external callback.
 
-    It is handy for some languages that need to add a hierarchy of 
+    It is handy for some languages that need to add a hierarchy of
         normalization and filtering at the word level.
 
     Args:
@@ -66,13 +57,10 @@ def word_level_normalizer(
     return " ".join(normalized_words)
 
 
-def text_level_normalizer(
-    text: str,
-    fn_callback=None
-) -> str:
+def text_level_normalizer(text: str, fn_callback=None) -> str:
     """A text level of normalization using an external callback.
 
-    It is handy for some languages that need to add a hierarchy of 
+    It is handy for some languages that need to add a hierarchy of
         normalization and filtering at the text level.
 
     Args:
