@@ -1,6 +1,6 @@
 from typing import Any
 
-from wav2vec_toolkit.text_preprocessing.normalizer import NormalizerOperation
+from wav2vec_toolkit.text_preprocessing.normalizers import NormalizerOperation
 
 
 class Normalizer(NormalizerOperation):

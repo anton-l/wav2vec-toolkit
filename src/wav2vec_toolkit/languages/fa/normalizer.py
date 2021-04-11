@@ -2,14 +2,14 @@ from typing import Any
 
 import hazm
 
-from wav2vec_toolkit.text_preprocessing.normalizer import NormalizerOperation
+from wav2vec_toolkit.text_preprocessing.normalizers import NormalizerOperation
 
 
 normalizer = hazm.Normalizer()
 
 
 class Normalizer(NormalizerOperation):
-    _whitelist = r"[0-9a-Z۰۱۲۳۴۵۶۷۸۹ءآئابتثجحخدذرزسشصضطظعغفقلمنهوپچژکگیە\-\u200c]+"
+    _whitelist = r"[0-9a-z۰۱۲۳۴۵۶۷۸۹ءآئابتثجحخدذرزسشصضطظعغفقلمنهوپچژکگیە\-\u200c]+"
     _dictionary = {
         "ك": "ک",
         "دِ": "د",

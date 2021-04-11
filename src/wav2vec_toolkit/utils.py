@@ -6,7 +6,7 @@ import pkg_resources
 
 
 BASE_PATH = "wav2vec_toolkit"
-LANG_PATH = "lang"
+LANG_PATH = "languages"
 LANG_MODULE_REQUIREMENTS = ["normalizer.py", "parameters.py", "requirements.txt"]
 
 
