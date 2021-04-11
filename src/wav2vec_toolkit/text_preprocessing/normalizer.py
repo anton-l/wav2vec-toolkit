@@ -1,159 +1,115 @@
 import re
-import string
-from typing import Callable, Dict, List, Optional
+import textwrap
+from typing import Any, Dict
 
-from wav2vec_toolkit.text_preprocessing.lang import LANGUAGES
-
-
-def chars_to_map(sentence: str, dictionary: Dict[str, str] = {}) -> str:
-    """Maps every character, words, and phrase into a proper one.
-
-    Args:
-        sentence (str): A piece of text.
-        dictionary (dict, optional): A dictionary of chars, words, and phrase that your want to alter in the sentence.. Defaults to {}.
-
-    Returns:
-        str: [description]
-    """
-    pattern = "|".join(map(re.escape, dictionary.keys()))
-    return re.sub(pattern, lambda m: dictionary[m.group()], str(sentence))
+from wav2vec_toolkit.utils import load_module_from_lang
 
 
-def chars_to_remove(sentence: str, chars_to_ignore_regex: str) -> str:
-    """Filters out specified characters from sentence
+class NormalizerOperation:
+    """A general normalizer for every language"""
 
-    Args:
-        sentence (str): A piece of text.
-        chars_to_ignore_regex (str): A regex of chars that you want to filter out from the sentence.
+    _whitelist = r"\w+"
+    _dictionary = {}
 
-    Returns:
-        str: The correct and meaningful sentence
-    """
-    sentence = re.sub(chars_to_ignore_regex, "", sentence).lower()
-    return sentence
+    def __init__(
+        self,
+        text_key_name: str = "sentence",
+        whitelist: str = None,
+        dictionary: Dict[str, str] = None,
+        do_lowercase: bool = True,
+        do_text_normalization: bool = True,
+        do_lastspace_removing: bool = True,
+    ) -> None:
+        self.text_key_name = text_key_name
+        self.whitelist = whitelist if whitelist and isinstance(whitelist, str) else self._whitelist
+        self.dictionary = dictionary if dictionary and isinstance(dictionary, dict) else self._dictionary
+        self.do_lowercase = do_lowercase
+        self.do_text_normalization = do_text_normalization
+        self.do_lastspace_removing = do_lastspace_removing
 
+    def chars_to_map(self, sentence: str) -> str:
+        """Maps every character, words, and phrase into a proper one.
 
-def word_level_normalizer(sentence: str, fn_callback=None) -> str:
-    """A world level of normalization using an external callback.
+        Args:
+            sentence (str): A piece of text.
+        """
+        if not len(self.dictionary) > 0:
+            return sentence
 
-    It is handy for some languages that need to add a hierarchy of
-        normalization and filtering at the word level.
+        pattern = "|".join(map(re.escape, self.dictionary.keys()))
+        return re.sub(pattern, lambda m: self.dictionary[m.group()], str(sentence))
 
-    Args:
-        sentence (str): A piece of text.
-        fn_callback (Callable[[str], str], optional): A word level callback function. Defaults to None.
+    def chars_to_preserve(
+        self,
+        sentence: str,
+    ) -> str:
+        """Keeps specified characters from sentence
 
-    Returns:
-        str: The correct and meaningful sentence
-    """
-    words = sentence.split(" ")
-    normalized_words = []
+        Args:
+            sentence (str): A piece of text.
+        """
+        try:
+            tokenized = re.findall(self.whitelist, sentence, re.IGNORECASE)
+            return " ".join(tokenized)
+        except Exception as error:
+            print(
+                textwrap.dedent(
+                    f"""
+                    Bad characters range {self.whitelist},
+                    {error}
+                    """
+                )
+            )
+            exit()
 
-    for word in words:
-        if callable(fn_callback):
-            word = fn_callback(word)
-        normalized_words.append(word)
-
-    return " ".join(normalized_words)
-
-
-def text_level_normalizer(text: str, fn_callback=None) -> str:
-    """A text level of normalization using an external callback.
-
-    It is handy for some languages that need to add a hierarchy of
+    def text_level_normalizer(self, sentence: str, *args: Any, **kwargs: Any) -> str:
+        """A text level of normalization.
+        It is handy for some languages that need to add a hierarchy of
         normalization and filtering at the text level.
 
-    Args:
-        text (str): A piece of text.
-        fn_callback (Callable, optional): A text level callback function. Defaults to None.
-
-    Returns:
-        str: The correct and meaningful sentence
-    """
-    if callable(fn_callback):
-        text = fn_callback(text)
-
-    return text
-
-
-def normalizer(
-    batch: Dict,
-    lang: str = "default",
-    text_normalizer: bool = True,
-    word_normalizer: bool = True,
-    lower_normalizer: bool = True,
-    return_dict: bool = True,
-    remove_extra_space: bool = True,
-    remove_last_space: bool = True,
-    text_key: str = "sentence",
-    dictionary: Dict[str, str] = None,
-    chars_to_ignore: List[str] = None,
-    word_level_action=None,
-    text_level_action=None,
-):
-    """A general normalizer for every language
-
-    Args:
-        batch (Dict): A batch of input.
-        lang (str, optional): Your dataset language. Defaults to "default".
-        text_normalizer (bool, optional): Whether to use a text normalizer or not. Defaults to True.
-        word_normalizer (bool, optional): Whether to use a word normalizer or not. Defaults to True.
-        lower_normalizer (bool, optional): Whether to make lowercase a text or not. Defaults to True.
-        return_dict (bool, optional): Whether to return dictionary of batch or not just the text. Defaults to True.
-        remove_extra_space (bool, optional): Whether to remove extra spaces or not. Defaults to True.
-        remove_last_space (bool, optional): Whether to add an extra space at the end or not. Defaults to True.
-        text_key (str, optional): Get the key name for text in the batch. Defaults to "sentence".
-        dictionary (Dict[str, str], optional): A dictionary of chars, words, phrase to map. Defaults to None.
-        chars_to_ignore (List[str], optional): A list of chars to filter out. Defaults to None.
-        word_level_action (Callable, optional): A callback function for word level normalization. Defaults to None.
-        text_level_action (Callable, optional): A callback function for text level normalization. Defaults to None.
-    """
-
-    lang = LANGUAGES[lang] if lang in LANGUAGES else LANGUAGES["default"]
-
-    if not chars_to_ignore or not isinstance(chars_to_ignore, list):
-        chars_to_ignore = lang["chars_to_ignore"]
-
-    if not dictionary or not isinstance(dictionary, dict):
-        dictionary = lang["dictionary"]
-
-    if not text_level_action or not callable(text_level_action):
-        text_level_action = lang["text_level_action"]
-
-    if not word_level_action or not callable(word_level_action):
-        word_level_action = lang["word_level_action"]
-
-    text = batch[text_key].strip()
-
-    if lower_normalizer:
-        text = text.lower()
-
-    # Dictionary mapping
-    if len(dictionary) > 0:
-        text = chars_to_map(text, dictionary)
-
-    # Remove specials
-    if len(chars_to_ignore) > 0:
-        chars_to_ignore = f"""[{"".join(chars_to_ignore)}]"""
-        text = chars_to_remove(text, chars_to_ignore)
-
-    if text_normalizer:
-        text = text_level_normalizer(text, text_level_action)
-
-    if word_normalizer:
-        text = word_level_normalizer(text, word_level_action)
-
-    # Remove extra spaces
-    if remove_extra_space:
-        text = re.sub(" +", " ", text)
-
-    if remove_last_space:
-        text = text.strip()
-    else:
-        text = text.strip() + " "
-
-    if not return_dict:
+        Args:
+            sentence (str): A piece of text.
+        """
+        text = sentence
         return text
 
-    batch[text_key] = text
-    return batch
+    def __call__(self, batch: Dict, return_dict: bool = True, *args: Any, **kwargs: Any) -> Any:
+        """Normalization caller
+
+        Args:
+            batch (Dict): A batch of input.
+            return_dict (bool, optional): Whether to return dictionary of batch or not just the text. Defaults to True.. Defaults to True.
+        """
+
+        if self.text_key_name not in batch:
+            raise KeyError(
+                textwrap.dedent(
+                    f"""
+                    keyname {self.text_key_name} not existed in the batch dictionary,
+                    the batch dictionary consists of the following keys {list(batch.keys())},
+                    you can easily add a new keyname by passing the `text_key_name` into Normalizer.
+                    """
+                )
+            )
+
+        text = batch[self.text_key_name].strip()
+        text = self.chars_to_map(text)
+        text = self.chars_to_preserve(text)
+
+        if self.do_text_normalization:
+            text = self.text_level_normalizer(text, *args, **kwargs)
+
+        text = text.strip()
+        if not self.do_lastspace_removing:
+            text = text + " "
+
+        if not return_dict:
+            return text
+
+        batch[self.text_key_name] = text
+        return batch
+
+
+def normalizer(lang: str):
+    normalizer_cls, _ = load_module_from_lang(lang)
+    return normalizer_cls
