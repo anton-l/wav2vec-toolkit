@@ -110,6 +110,6 @@ class NormalizerOperation:
         return batch
 
 
-def normalizer(lang: str):
+def normalizers(lang: str):
     normalizer_cls, _ = load_module_from_lang(lang)
     return normalizer_cls
