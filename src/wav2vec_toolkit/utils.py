@@ -7,7 +7,7 @@ import pkg_resources
 
 BASE_PATH = "wav2vec_toolkit"
 LANG_PATH = "languages"
-LANG_MODULE_REQUIREMENTS = ["normalizer.py", "parameters.py", "requirements.txt"]
+LANG_MODULE_REQUIREMENTS = ["normalizer.py", "README.md", "requirements.txt"]
 
 
 def get_file_path(name: str):
@@ -50,7 +50,8 @@ def load_module_from_lang(lang: str):
                 """
             )
         )
-        exit()
+        raise
+
     except pkg_resources.DistributionNotFound as error:
         print(
             textwrap.dedent(
@@ -62,10 +63,10 @@ def load_module_from_lang(lang: str):
                 """
             )
         )
-        exit()
+        raise
 
     try:
-        module = __import__(lang_mod_path.replace("/", "."), fromlist=["Normalizer", "Parameters"])
+        module = __import__(lang_mod_path.replace("/", "."), fromlist=["Normalizer"])
     except ModuleNotFoundError:
         print(
             textwrap.dedent(
@@ -76,8 +77,7 @@ def load_module_from_lang(lang: str):
                 """
             )
         )
-        exit()
+        raise
 
     normalizer = module.Normalizer if getattr(module, "Normalizer") else None
-    parameters = module.Parameters if getattr(module, "Parameters") else None
-    return normalizer, parameters
+    return normalizer

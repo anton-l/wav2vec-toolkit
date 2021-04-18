@@ -1,6 +1,7 @@
 import re
+import sys
 import textwrap
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from wav2vec_toolkit.utils import load_module_from_lang
 
@@ -10,22 +11,18 @@ class NormalizerOperation:
 
     _whitelist = r"\w+"
     _dictionary = {}
+    _text_key_name: str = "sentence"
+    _do_lowercase: bool = True
 
     def __init__(
         self,
-        text_key_name: str = "sentence",
         whitelist: str = None,
         dictionary: Dict[str, str] = None,
-        do_lowercase: bool = True,
-        do_text_normalization: bool = True,
-        do_lastspace_removing: bool = True,
     ) -> None:
-        self.text_key_name = text_key_name
+        self.text_key_name = self._text_key_name
         self.whitelist = whitelist if whitelist and isinstance(whitelist, str) else self._whitelist
         self.dictionary = dictionary if dictionary and isinstance(dictionary, dict) else self._dictionary
-        self.do_lowercase = do_lowercase
-        self.do_text_normalization = do_text_normalization
-        self.do_lastspace_removing = do_lastspace_removing
+        self.do_lowercase = self._do_lowercase
 
     def chars_to_map(self, sentence: str) -> str:
         """Maps every character, words, and phrase into a proper one.
@@ -60,7 +57,7 @@ class NormalizerOperation:
                     """
                 )
             )
-            exit()
+            raise
 
     def text_level_normalizer(self, sentence: str, *args: Any, **kwargs: Any) -> str:
         """A text level of normalization.
@@ -73,43 +70,61 @@ class NormalizerOperation:
         text = sentence
         return text
 
-    def __call__(self, batch: Dict, return_dict: bool = True, *args: Any, **kwargs: Any) -> Any:
+    def __call__(
+        self,
+        batch: Dict,
+        return_dict: bool = True,
+        do_lastspace_removing: bool = True,
+        text_key_name: Optional[str] = None,
+        do_lowercase: Optional[bool] = None,
+        *args: Any,
+        **kwargs: Any,
+    ) -> Any:
         """Normalization caller
 
         Args:
             batch (Dict): A batch of input.
-            return_dict (bool, optional): Whether to return dictionary of batch or not just the text. Defaults to True.. Defaults to True.
+            text_key_name (str, optional): The key name of text in the batch input.
+            return_dict (bool, optional): Whether to return dictionary of batch or not just the text. Defaults to True.
+            do_lastspace_removing (bool, optional): Whether to add extra space at the end of text or not. Defaults to True.
+            do_lowercase (bool, optional): Whether to do lowercase or not. Defaults to None.
         """
 
-        if self.text_key_name not in batch:
+        text_key_name = text_key_name if text_key_name else self.text_key_name
+        do_lowercase = do_lowercase if isinstance(do_lowercase, bool) else self.do_lowercase
+
+        if text_key_name not in batch:
             raise KeyError(
                 textwrap.dedent(
                     f"""
-                    keyname {self.text_key_name} not existed in the batch dictionary,
+                    keyname {text_key_name} not existed in the batch dictionary,
                     the batch dictionary consists of the following keys {list(batch.keys())},
                     you can easily add a new keyname by passing the `text_key_name` into Normalizer.
                     """
                 )
             )
 
-        text = batch[self.text_key_name].strip()
+        text = batch[text_key_name].strip()
+
+        if do_lowercase:
+            text = text.lower()
+
         text = self.chars_to_map(text)
         text = self.chars_to_preserve(text)
-
-        if self.do_text_normalization:
-            text = self.text_level_normalizer(text, *args, **kwargs)
+        text = self.text_level_normalizer(text, *args, **kwargs)
 
         text = text.strip()
-        if not self.do_lastspace_removing:
+        if not do_lastspace_removing:
             text = text + " "
 
         if not return_dict:
             return text
 
-        batch[self.text_key_name] = text
+        batch[text_key_name] = text
         return batch
 
 
-def normalizers(lang: str):
-    normalizer_cls, _ = load_module_from_lang(lang)
-    return normalizer_cls
+def normalizers(lang: str) -> NormalizerOperation:
+
+    _normalizer = load_module_from_lang(lang)()
+    return _normalizer

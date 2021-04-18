@@ -1,1 +1,0 @@
-# Language: Irish (ga)

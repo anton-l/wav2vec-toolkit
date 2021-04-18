@@ -1,4 +1,6 @@
+import pathlib
 from setuptools import find_packages, setup
+
 
 INSTALL_REQ = [
     "datasets>=1.5.0",
@@ -8,7 +10,7 @@ INSTALL_REQ = [
     "audiomentations",
 
     # language-specific packages
-    "hazm",  # Farsi
+    # "hazm",  # Farsi
 ]
 
 
@@ -20,12 +22,21 @@ EXTRAS_REQ = {
     ],
 }
 
+languages_packages = [
+    "wav2vec_toolkit/{}".format(p).replace("/", ".")
+    for p
+    in pathlib.Path("languages").glob("**")
+]
 
 setup(
     name="wav2vec_toolkit",
     version="0.0.1",
-    package_dir={"": "src"},
-    packages=find_packages("src"),
+    package_dir={
+        "wav2vec_toolkit": "src/wav2vec_toolkit",
+        "wav2vec_toolkit.languages": "languages"
+    },
+    packages=find_packages(where="src") + languages_packages,
+    include_package_data=True,
     url="https://github.com/anton-l/wav2vec-toolkit",
     license="Apache 2.0",
     author="The HuggingFace community",

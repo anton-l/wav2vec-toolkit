@@ -1,1 +1,0 @@
-# Language: Persian (fa)
