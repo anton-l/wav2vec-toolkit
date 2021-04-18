@@ -14,7 +14,7 @@ languages
 Or you can just use our template as below:
 ```bash
 mkdir languages/{YOUR_ISO_CODE_LANGUAGE}
-cp templates/languages/* languages/{YOUR_ISO_CODE_LANGUAGE}
+cp templates/language/* languages/{YOUR_ISO_CODE_LANGUAGE}
 ```
 
 The `__init__.py` have to import your normalizer as below:
