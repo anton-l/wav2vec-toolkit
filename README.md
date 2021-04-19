@@ -17,6 +17,19 @@ low-resource languages **[link]**
 	git remote add upstream https://github.com/anton-l/wav2vec-toolkit.git
 	```
 
+3. Set up a development environment by running the following command in a virtual environment:
+
+	```bash
+	conda create -n env python=3.7 --y
+	conda activate env
+	pip install -e ".[dev]"
+	pip install -r languages/{YOUR_SPECIFIC_LANGUAGE}/requirements.txt
+	```
+
+   (If wav2vec-toolkit was already installed in the virtual environment, remove
+   it with `pip uninstall wav2vec_toolkit` before reinstalling it in editable
+   mode with the `-e` flag.)
+
 3. Create a new branch to hold your development changes:
 
 	```bash
@@ -25,23 +38,14 @@ low-resource languages **[link]**
 
 	**do not** work on the `master` branch.
 
-4. Set up a development environment by running the following command in a virtual environment:
+4. Develop the features on your branch.
+   1. Adding a new language [here](ADD_NEW_LANGUAGE.md)
+
+5. Format your code. Run black and isort so that your newly added files look nice with the following command:
 
 	```bash
-	pip install -e ".[dev]"
-	```
-
-   (If wav2vec-toolkit was already installed in the virtual environment, remove
-   it with `pip uninstall wav2vec_toolkit` before reinstalling it in editable
-   mode with the `-e` flag.)
-
-5. Develop the features on your branch.
-
-6. Format your code. Run black and isort so that your newly added files look nice with the following command:
-
-	```bash
-	black --line-length 119 --target-version py36 src scripts
-	isort src scripts
+	black --line-length 119 --target-version py36 src scripts languages
+	isort src scripts languages
 	```
 
 7. Once you're happy with your implementation, add your changes and make a commit to record your changes locally:
